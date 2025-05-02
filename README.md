@@ -41,6 +41,7 @@ Este proyecto tiene como objetivo desarrollar un sistema automático que permita
 
 ### 3. Detección no supervisada
 - Reducción dimensional con PCA.
+- Clustering con KMeans
 
 ---
 
