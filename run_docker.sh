@@ -19,7 +19,7 @@ echo ""
 echo "¿Qué quieres ejecutar dentro del contenedor?"
 echo "1) Bash interactivo"
 echo "2) Jupyter Notebook (http://localhost:8888)"
-echo "3) Streamlit App (http://localhost:8501)"
+echo "3) Dashboard Streamlit (http://localhost:8501)"
 read -p "Selecciona una opción (1/2/3): " OPTION
 
 # Ejecutar según opción
