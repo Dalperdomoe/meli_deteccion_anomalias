@@ -41,10 +41,11 @@ st.markdown("""
 Crear un sistema automatico cuya única tarea sea detectar si la visita al sitio web de Mercado Libre es o no es hecha por un ser humano.
 """)
 
-tab1, tab2, tab3, tab4 = st.tabs(["¿Qué tenemos? :open_book:", 
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["¿Qué tenemos? :open_book:", 
                                         "Mise en place :scientist:", 
                                         "Golem :shield:",
-                                        "Sugerencias :bell:"])
+                                        "Sugerencias :bell:",
+                                        "Arquitectura :building_construction:"])
 
 with tab1:
     st.image(os.path.join(BASE_PATH, 'references', 'memes', 'gandalf_reading.jpeg'), width=400)
@@ -288,14 +289,33 @@ with tab3:
 with tab4:
 
     st.markdown("""
-    # Propuestas de Mitigación
+    ### Propuestas de Mitigación
                 
-    ## 1. Bloqueo o limitación de IPs sospechosas
+    #### 1. Bloqueo o limitación de IPs sospechosas
         - Bloqueadas temporal o permanentemente
         - rate limiting para rutas sensibles como /item
-    ## 2. Implementación de CAPTCHAs 
+    #### 2. Implementación de CAPTCHAs 
         - Si detecta comportamiento nocturno inusual
         - Vienen de user-agents sospechosos (curl, Scrapy, etc.)
         - No hay referrer o referrer sospechoso
+                
+    """)
 
+with tab5:
+
+    st.markdown("### ¿Cómo se puede automatizar el flujo?")
+
+    st.image(os.path.join(BASE_PATH, 'reports', 'diagrama_arquitectura.png'), width=500)
+
+    st.markdown("""
+
+    #### 1. Ingesta de Datos Web
+        - Capturar y Guardar logs en un bucket o base
+        - Programar la carga diaria o continua usando Airflow
+
+    ### 2. Pipeline
+        -  Limpie y transforme los datos
+        - Genere las features por IP
+        - Aplique el modelo entrenado
+        - Etiquete IPs nuevas     
     """)
