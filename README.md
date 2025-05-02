@@ -21,7 +21,11 @@ Este proyecto tiene como objetivo desarrollar un sistema automático que permita
 ├── requirements.txt    # Dependencias del entorno
 ├── run_docker.sh       # Script para ejecutar el proyecto con Docker
 ├── setup/              # Código de configuración y app en Streamlit
-│   └── streamlit.py
+│   ├── constants.py
+│   ├── __init__.py
+│   ├── predict.py
+│   ├── streamlit.py
+│   └── transform_data.py
 └── README.md           # Este archivo
 ```
 
