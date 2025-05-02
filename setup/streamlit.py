@@ -50,7 +50,7 @@ with tab1:
     st.image(os.path.join(BASE_PATH, 'references', 'memes', 'gandalf_reading.jpeg'), width=400)
 
     st.markdown("""
-    ### Información disponible
+    ### ¿Cómo voy a destruir algo que no conozco? ¡A explorar!
     | Campo             | Descripción |
     |------------------|-------------|
     | `timestamp`       | Momento exacto de la visita |
@@ -241,7 +241,61 @@ with tab2:
     st.image(os.path.join(BASE_PATH, 'references', 'memes', 'lab.jpg'), width=500)
 
 with tab3:
-    st.image(os.path.join(BASE_PATH, 'references', 'memes', 'bloqueo.jpg'), width=500)
+    st.image(os.path.join(BASE_PATH, 'references', 'memes', 'golem.png'), width=500)
 
+    st.markdown("""
+    # ¿Y como construimos este golem?
+                
+    1. ❌ No tenemos etiquetas reales
+    2. ✅ Pero sí tenemos comportamientos sospechosos
+                
+    Por eso debemos usar un método no supervisado.
+                
+    ## ¿Por qué elegimos KMeans?
+    | Razón                       | Descripción                                                                        |
+    | --------------------------- | ---------------------------------------------------------------------------------- |
+    | 🔍 Detecta patrones comunes | Agrupa IPs según similitud en características como frecuencia, errores, UA.        |
+    | ⚡ Rápido y escalable        | Funciona bien con +100K visitas (como las tuyas) y escala a datasets grandes.      |
+    | 🧠 Fácil de interpretar     | Cada cluster tiene un centroide y es fácil examinar su perfil (humano, bot, etc.). |
+    | 📈 Se puede visualizar bien | Con PCA se pueden graficar los clusters y explicarlos fácilmente.                  |
+    | 🛠️ Simple de implementar   | Requiere solo número de clusters como parámetro, fácil de ajustar con métricas.    |
+    """)
 
-# PERO COMO VOY A DESTRUIR ALGO QUE NO CONOZCO? VAMOS A EXPLORAR!
+    st.image(os.path.join(BASE_PATH, 'reports', 'figures', 'metodo_codo.png'), width=700)
+    st.image(os.path.join(BASE_PATH, 'reports', 'figures', 'metricas_kmeans.png'), width=2000)
+
+    st.markdown("""
+    | Criterio                  | ¿Qué evalúa?                                                       | ¿Qué buscamos?                          | Resultado con K=3                           | ¿Por qué importa?                                                                 |
+    |---------------------------|---------------------------------------------------------------------|------------------------------------------|---------------------------------------------|------------------------------------------------------------------------------------|
+    | Método del Codo           | Si agregar más grupos mejora realmente la agrupación               | Un punto de equilibrio ("codo")          | K=3 es donde la mejora se estabiliza         | Nos ayuda a elegir una cantidad adecuada de grupos sin hacer el modelo más complejo |
+    | Silhouette Score          | Qué tan bien separados y definidos están los grupos                | Valor alto (hasta 1)                     | K=3 da 0.60 (bueno)                          | Los grupos están bien diferenciados y tienen sentido                               |
+    | Índice Calinski-Harabasz | Qué tan distintos son los grupos entre sí                          | Valor alto                               | K=3 da un valor alto                         | Muestra que los grupos tienen buena separación estadística                         |
+    | Índice Davies-Bouldin     | Cuánto se parecen los grupos entre sí (menos es mejor)             | Valor bajo (cerca de 0)                  | K=3 da 0.44 (bajo)                           | Los grupos están bien separados, sin mezclarse                                     |
+
+    """)
+
+    st.image(os.path.join(BASE_PATH, 'reports', 'figures', 'cluster.png'), width=700)
+
+    st.markdown("""
+    | Cluster | Descripción General        | Comportamiento Destacado                                                                                  | Señales Sospechosas                         | Actividad Nocturna     | Posible Etiqueta     |
+    |---------|----------------------------|------------------------------------------------------------------------------------------------------------|---------------------------------------------|------------------------|----------------------|
+    | 0       | Tráfico humano típico      | Navegación variada. Referrer normal o desde API. Rutas visitadas diversas.                  | Ninguna. Sin errores, UA válido, IPs limpias. | Moderada (esperable)   | Humano               |
+    | 1       | Bot       | Accesos automáticos frecuentes. Navegación mecánica, desde IPs con país desconocido y UA sospechoso.       | Todas activadas: errores, bots, referrer nulo, scraping. | Muy alta (principalmente madrugada) | Bot                  |
+    | 2       | Tráfico humano enfocado    | Navegación centrada casi exclusivamente en `/item`, sin errores, desde referrers internos.                 | Ruta muy específica. Comportamiento uniforme. | Algo elevada           | Humano / Requiere revisión |
+            
+    """)
+
+with tab4:
+
+    st.markdown("""
+    # Propuestas de Mitigación
+                
+    ## 1. Bloqueo o limitación de IPs sospechosas
+        - Bloqueadas temporal o permanentemente
+        - rate limiting para rutas sensibles como /item
+    ## 2. Implementación de CAPTCHAs 
+        - Si detecta comportamiento nocturno inusual
+        - Vienen de user-agents sospechosos (curl, Scrapy, etc.)
+        - No hay referrer o referrer sospechoso
+
+    """)
