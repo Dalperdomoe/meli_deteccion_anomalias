@@ -47,6 +47,9 @@ Este proyecto tiene como objetivo desarrollar un sistema automático que permita
 - Reducción dimensional con PCA.
 - Clustering con KMeans
 
+### 4. Visualización de resultados
+  - Incluye un dashboard interactivo en Streamlit
+
 ---
 
 ## 🚀 Uso con Docker
