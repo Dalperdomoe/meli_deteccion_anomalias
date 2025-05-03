@@ -41,8 +41,7 @@ st.markdown("""
 Crear un sistema automatico cuya única tarea sea detectar si la visita al sitio web de Mercado Libre es o no es hecha por un ser humano.
 """)
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["¿Qué tenemos? :open_book:", 
-                                        "Mise en place :scientist:", 
+tab1, tab2, tab3, tab4 = st.tabs(["¿Qué tenemos? :open_book:",
                                         "Golem :shield:",
                                         "Sugerencias :bell:",
                                         "Arquitectura :building_construction:"])
@@ -108,7 +107,7 @@ with tab1:
         (top_timestamp_hour, 'Hora de visita por número de solicitudes', 'Numero de solicitudes', ''),
     ]
 
-    # Crear figura y ejes
+
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20,6))
     axes = axes.flatten()
 
@@ -234,15 +233,97 @@ with tab1:
     | `referrer`      | Presente y coherente (misma sesión)               | Vacío o referrers inconsistentes                                      | Calcular % sin referrer por IP y ver si se concentra en ciertos patrones                                         |
     | `session_id`    | Reutilizado durante la sesión                     | Uno diferente por request o patrones tipo `bot-session-*`          | Detectar exceso de `session_id` únicos por IP y patrones en su nomenclatura (`regex`).                       |
     | `country_code`  | Códigos coherentes con tu mercado objetivo        | `??` o países atípicos                                              | Filtrar por país, marcar IPs con código `??` o regiones atípicas según distribución general.                   |   
-        
+
+    ### Mise en place (Preparación de Caracteristicas)
                 
 """)
+    
+    def clasificar_referrer(ref):
+        if ref == 'NULO':
+            return 'NULO'
+        elif 'mercadolibre' in ref:
+            return 'INTERNO'
+        elif 'api' in ref.strip().lower():
+            return 'API'
+        else:
+            return 'OTRO'
+
+    df['referrer_type'] = df['referrer'].apply(clasificar_referrer)
+
+    df = pd.concat([df.reset_index().drop(columns='index'), pd.get_dummies(df['referrer_type'], prefix='referrer_type').reset_index().drop(columns='index')], axis=1)
+
+    df['standar_url_path'] = df['url_path'].str.extract(r'^(/[^/?]+)', expand=False)
+
+    # Detección de session_id tipo bot
+    df['is_bot_session'] = df['session_id'].str.contains(r'bot-session-\d+', na=False)
+
+    # Códigos de país anómalos
+    df['is_country_unknown'] = df['country_code'] == '??'
+
+    # métodos HTTP
+    # captura el uso anómalo de métodos HTTP, como POST en rutas que normalmente son GET.
+    df['suspicious_post_usage'] = (
+        (df['http_method'] == 'POST') &
+        (df['standar_url_path'].isin(['/item', '/search', '/home', '/category', '/profile', '/checkout']))
+    )
+
+    # captura frecuencia sospechosa en ruta /item
+    df['suspicious_high_freq_path'] = df['standar_url_path'].isin(['/item'])
+
+    # Detección de user_agent sospechoso
+    suspicious_agents = ['python-requests', 'curl', 'Scrapy', 'go-http-client']
+    df['is_suspicious_ua'] = df['user_agent'].str.contains('|'.join(suspicious_agents), case=False, na=False)
+
+    # Frecuencia de errores HTTP por fila
+    df['is_not_found_error'] = df['response_code'].isin(['404'])
+    
+    refer_type = df['referrer_type'].value_counts().head(10).sort_values()
+    standar_url_path = df['standar_url_path'].value_counts().head(10).sort_values()
+    is_bot_session = df['is_bot_session'].astype('str').value_counts().head(10).sort_values()
+    is_country_unknown = df['is_country_unknown'].astype('str').value_counts().head(10).sort_values()
+    suspicious_post_usage = df['suspicious_post_usage'].astype('str').value_counts().head(10).sort_values()
+    suspicious_high_freq_path = df['suspicious_high_freq_path'].astype('str').value_counts().head(10).sort_values()
+    is_suspicious_ua = df['is_suspicious_ua'].astype('str').value_counts().head(10).sort_values()
+    is_not_found_error = df['is_not_found_error'].astype('str').value_counts().head(10).sort_values()
+
+    plots = [
+        (refer_type, 'Tipo referrer por número de solicitudes', 'Numero de solicitudes', 'Tipo referrer'),
+        (standar_url_path, 'Standar url path por número de solicitudes', 'Numero de solicitudes', 'Standar url path'),
+        (is_bot_session, 'is_bot_session por número de solicitudes', 'Numero de solicitudes', 'is_bot_session'),
+        (is_country_unknown, 'is_country_unknown por número de solicitudes', 'Numero de solicitudes', 'is_country_unknown'),
+        (suspicious_post_usage, 'suspicious_post_usage por número de solicitudes', 'Numero de solicitudes', 'suspicious_post_usage'),
+        (suspicious_high_freq_path, 'suspicious_high_freq_path por número de solicitudes', 'Numero de solicitudes', 'suspicious_high_freq_path'),
+        (is_suspicious_ua, 'is_suspicious_ua por número de solicitudes', 'Numero de solicitudes', 'is_suspicious_ua'),
+        (is_not_found_error, 'is_not_found_error por número de solicitudes', 'Numero de solicitudes', 'is_not_found_error'),
+    ]
+    
+
+    # Crear figura y ejes
+    fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(20, 15))
+    axes = axes.flatten()
+
+
+    # Graficar cada uno
+    for i, (data, title, xlabel, ylabel) in enumerate(plots):
+        colors = cm.RdBu(np.linspace(0, 1, len(data)))
+        axes[i].barh(data.index, data.values, color=colors)
+        axes[i].set_title(title)
+        axes[i].set_xlabel(xlabel)
+        axes[i].set_ylabel(ylabel)
+
+    # Eliminar subplot vacío si es impar
+    if len(plots) < len(axes):
+        fig.delaxes(axes[-1])
+
+    # Ajustar diseño
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    st.image(os.path.join(BASE_PATH, 'reports', 'figures', 'matriz_correlacion.png'), width=500)
+
+    st.image(os.path.join(BASE_PATH, 'reports', 'figures', 'pca_numero_componentes.png'), width=500)
 
 with tab2:
-    st.image(os.path.join(BASE_PATH, 'references', 'memes', 'lab.jpg'), width=500)
-
-with tab3:
-    st.image(os.path.join(BASE_PATH, 'references', 'memes', 'golem.png'), width=500)
 
     st.markdown("""
     # ¿Y como construimos este golem?
@@ -286,7 +367,7 @@ with tab3:
             
     """)
 
-with tab4:
+with tab3:
 
     st.markdown("""
     ### Propuestas de Mitigación
@@ -301,7 +382,7 @@ with tab4:
                 
     """)
 
-with tab5:
+with tab4:
 
     st.markdown("### ¿Cómo se puede automatizar el flujo?")
 
